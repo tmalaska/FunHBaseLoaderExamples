@@ -11,4 +11,4 @@ hadoop jar target/HBaseUtilMain.jar com.cloudera.sa.hbaseloadexamples.DataGenera
 
 hadoop jar target/HBaseUtilMain.jar com.cloudera.sa.hbaseloadexamples.HBaseSinglePut "/mvp/ingest/staging" "christoph_gamer" "i"
 
-hadoop jar target/HBaseUtilMain.jar com.cloudera.sa.hbaseloadexamples.HBasePutListMultiThreaded "/mvp/ingest/staging" "christoph_gamer" "i" 320 4
+hadoop jar target/HBaseUtilMain.jar com.cloudera.sa.hbaseloadexamples.HBasePutListMultiThreaded "/mvp/ingest/staging" "christoph_gamer" "i" 320 8
