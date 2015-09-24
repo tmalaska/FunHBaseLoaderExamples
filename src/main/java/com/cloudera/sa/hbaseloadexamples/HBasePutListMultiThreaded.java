@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,6 +27,9 @@ import org.apache.log4j.Logger;
 public class HBasePutListMultiThreaded
 {
 	public static AtomicInteger threadFinishedCounter = new AtomicInteger(0);
+	
+	protected static List<Connection> _connectionsAvailable;
+	protected static List<Connection> _connectionsInUse;
 
 	public static void main(String[] args) throws IOException
 	{
@@ -94,10 +98,44 @@ public class HBasePutListMultiThreaded
 			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 		}
 
-
 		executor.shutdown();
+		Connection connection = null;
+		while ((connection = getConnection()) != null)
+		{
+			connection.close();
+		}
 
 		System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime) + " " + HBasePutListMultiThreaded.threadFinishedCounter.get() + " " + threadsStarted);
+	}
+	
+	public static synchronized Connection getConnection()
+	{
+		Connection connection = null;
+		
+		if (_connectionsAvailable.isEmpty()) 
+		{
+			try
+			{
+				connection = ConnectionFactory.createConnection();
+			} 
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			_connectionsInUse.add(connection);
+		}
+		else
+		{
+			connection = _connectionsAvailable.get(0);
+			_connectionsInUse.add(connection);
+		}
+		return connection;
+	}
+	
+	public static synchronized void putConnection(Connection connection)
+	{
+		_connectionsInUse.remove(connection);
+		_connectionsAvailable.add(connection);
 	}
 
 	public static byte[] makeRowKey(String cell)
@@ -126,7 +164,7 @@ class PutListThread implements Runnable
 		Connection connection = null;
 		try
 		{
-			connection = ConnectionFactory.createConnection();
+			connection = HBasePutListMultiThreaded.getConnection();
 			Table table = null;
 			try
 			{
@@ -145,14 +183,7 @@ class PutListThread implements Runnable
 		{
 			if (connection != null)
 			{
-				try
-				{
-					connection.close();
-				} 
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
+				HBasePutListMultiThreaded.putConnection(connection);
 			}
 		}
 		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
