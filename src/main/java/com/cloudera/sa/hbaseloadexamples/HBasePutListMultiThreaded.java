@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -61,6 +63,7 @@ public class HBasePutListMultiThreaded
 		int threadsStarted = 0;
 		
 		ArrayList<Put> putList = new ArrayList<Put>();
+		ArrayList<Future> futures = new ArrayList<Future>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
@@ -80,7 +83,8 @@ public class HBasePutListMultiThreaded
 				{
 
 					threadsStarted++;
-					executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
+					Future future = executor.submit(new PutListThread(TableName.valueOf(tableName), putList));
+					futures.add(future);
 
 					putList = new ArrayList<Put>();
 				}
@@ -94,19 +98,27 @@ public class HBasePutListMultiThreaded
 		if (putList.size() > 0)
 		{
 			threadsStarted++;
-			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
+			Future future = executor.submit(new PutListThread(TableName.valueOf(tableName), putList));
+			futures.add(future);
 		}
 
-		executor.shutdown();
-		
-		try
+		for (Future future : futures)
 		{
-			executor.awaitTermination(10, TimeUnit.MINUTES);
-		} 
-		catch (InterruptedException e)
-		{
-			e.printStackTrace();
+			try
+			{
+				future.get();
+			} 
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			} 
+			catch (ExecutionException e)
+			{
+
+				e.printStackTrace();
+			}
 		}
+		executor.shutdown();
 		
 		shutdownConnections();
 		
