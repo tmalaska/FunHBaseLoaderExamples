@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -28,8 +26,8 @@ public class HBasePutListMultiThreaded
 {
 	public static AtomicInteger threadFinishedCounter = new AtomicInteger(0);
 	
-	protected static List<Connection> _connectionsAvailable;
-	protected static List<Connection> _connectionsInUse;
+	protected static List<Connection> _connectionsAvailable = new ArrayList<Connection>();
+	protected static List<Connection> _connectionsInUse = new ArrayList<Connection>();
 
 	public static void main(String[] args) throws IOException
 	{
