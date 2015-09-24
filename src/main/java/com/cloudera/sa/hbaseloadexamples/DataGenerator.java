@@ -51,6 +51,8 @@ public class DataGenerator {
         e.printStackTrace();
       }
     }
+    
+    executor.shutdown();
   }
   
 }
