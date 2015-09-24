@@ -1,6 +1,5 @@
 package com.cloudera.sa.hbaseloadexamples;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,99 +19,128 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class HBasePutListMultiThreaded {
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.out.println("{inputDirectory} {tableName} {columnFamily} {PutListSize} {threads}");
-      return;
-    }
+public class HBasePutListMultiThreaded
+{
 
-    String inputFile = args[0];
-    String tableName = args[1];
-    byte[] columnFamily = Bytes.toBytes(args[2]);
-    int putListSize = Integer.parseInt(args[3]);
-    int numberOfThreads = Integer.parseInt(args[4]);
+	public static void main(String[] args) throws IOException
+	{
 
-    ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+		String usage = "{inputDirectory} {tableName} {columnFamily} {PutListSize} {threads}";
+		if (args.length != usage.split(" ").length)
+		{
+			System.out.println(usage);
+			return;
+		}
 
-    byte[] qualifier1 = Bytes.toBytes("C1");
-    byte[] qualifier2 = Bytes.toBytes("C2");
+		String inputFile = args[0];
+		String tableName = args[1];
+		byte[] columnFamily = Bytes.toBytes(args[2]);
+		int putListSize = Integer.parseInt(args[3]);
+		int numberOfThreads = Integer.parseInt(args[4]);
 
-    FileSystem fs = FileSystem.get(new Configuration());
+		ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
 
-    int i = 0;
+		byte[] qualifier1 = Bytes.toBytes("C1");
+		byte[] qualifier2 = Bytes.toBytes("C2");
 
-    long startTime = System.currentTimeMillis();
-    ArrayList<Put> putList = new ArrayList();
-    for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
-      BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-      String[] cells = reader.readLine().split(",");
+		FileSystem fs = FileSystem.get(new Configuration());
 
-      Put put = new Put(makeRowKey(cells[0]));
-      put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
-      put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
+		int i = 0;
 
-      putList.add(put);
+		long startTime = System.currentTimeMillis();
+		ArrayList<Put> putList = new ArrayList();
+		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
+		{
+			BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
-      if (putList.size() >= putListSize) {
+			String line = null;
+			while ((line = reader.readLine()) != null)
+			{
+				String[] cells = line.split(",");
 
-        executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
+				Put put = new Put(makeRowKey(cells[0]));
+				put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
+				put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
 
-        putList = new ArrayList<Put>();
-      }
+				putList.add(put);
 
-      if (i++ % 1000 == 0) {
-        System.out.print(".");
-      }
-    }
-    if (putList.size() > 0) {
-      executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
-    }
-    System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+				if (putList.size() >= putListSize)
+				{
 
+					executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 
-  }
+					putList = new ArrayList<Put>();
+				}
 
-  public static byte[] makeRowKey(String cell) {
-    int hashMod = (Math.abs(cell.hashCode()) % 10);
+				if (i++ % 1000 == 0)
+				{
+					System.out.print(".");
+				}
+			}
+		}
+		if (putList.size() > 0)
+		{
+			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
+		}
+		System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
 
-    return Bytes.toBytes(hashMod + "|" + cell);
-  }
+	}
+
+	public static byte[] makeRowKey(String cell)
+	{
+		int hashMod = (Math.abs(cell.hashCode()) % 10);
+
+		return Bytes.toBytes(hashMod + "|" + cell);
+	}
 }
 
-class PutListThread implements Runnable {
+class PutListThread implements Runnable
+{
 
-  TableName tableName;
-  ArrayList<Put> putList = new ArrayList<Put>();
+	TableName tableName;
+	ArrayList<Put> putList = new ArrayList<Put>();
 
-  public PutListThread(TableName tableName, ArrayList<Put> putList) {
-    this.tableName = tableName;
-    this.putList = putList;
-  }
+	public PutListThread(TableName tableName, ArrayList<Put> putList)
+	{
+		this.tableName = tableName;
+		this.putList = putList;
+	}
 
-  @Override
-  public void run() {
-    Connection connection = null;
-    try {
-      connection = ConnectionFactory.createConnection();
-      Table table = null;
-      try {
-        table = connection.getTable(tableName);
-        table.put(putList);
-      } finally {
-        table.close();
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    }
+	@Override
+	public void run()
+	{
+		Connection connection = null;
+		try
+		{
+			connection = ConnectionFactory.createConnection();
+			Table table = null;
+			try
+			{
+				table = connection.getTable(tableName);
+				table.put(putList);
+			} finally
+			{
+				table.close();
+			}
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		} 
+		finally
+		{
+			if (connection != null)
+			{
+				try
+				{
+					connection.close();
+				} 
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
 
-  }
+	}
 }

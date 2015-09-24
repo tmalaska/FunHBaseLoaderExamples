@@ -1,6 +1,5 @@
 package com.cloudera.sa.hbaseloadexamples;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -17,66 +16,79 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
-public class HBasePutList {
-  public static void main(String[] args) throws IOException {
-    if (args.length != 4) {
-      System.out.println("{inputDirectory} {tableName} {columnFamily} {PutListSize}");
-      return;
-    }
+public class HBasePutList
+{
+	public static void main(String[] args) throws IOException
+	{
 
-    String inputFile = args[0];
-    String tableName = args[1];
-    byte[] columnFamily = Bytes.toBytes(args[2]);
-    int putListSize = Integer.parseInt(args[3]);
-    byte[] qualifier1 = Bytes.toBytes("C1");
-    byte[] qualifier2 = Bytes.toBytes("C2");
+		String usage = "{inputDirectory} {tableName} {columnFamily} {PutListSize}";
+		if (args.length != usage.split(" ").length)
+		{
+			System.out.println(usage);
+			return;
+		}
 
-    FileSystem fs = FileSystem.get(new Configuration());
+		String inputFile = args[0];
+		String tableName = args[1];
+		byte[] columnFamily = Bytes.toBytes(args[2]);
+		int putListSize = Integer.parseInt(args[3]);
+		byte[] qualifier1 = Bytes.toBytes("C1");
+		byte[] qualifier2 = Bytes.toBytes("C2");
 
-    final Connection connection = ConnectionFactory.createConnection();
-    Table table = connection.getTable(TableName.valueOf(tableName));
-    int i = 0;
-    try {
-      long startTime = System.currentTimeMillis();
-      ArrayList<Put> putList = new ArrayList();
-      for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-        
-	    String line = null;
-	    while ((line = reader.readLine()) != null) 
-	    {	
-	    	String[] cells = line.split(",");
+		FileSystem fs = FileSystem.get(new Configuration());
 
-	        Put put = new Put(makeRowKey(cells[0]));
-	        put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
-	        put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
-	
-	        putList.add(put);
-	
-	        if (putList.size() >= putListSize) {
-	          table.put(putList);
-	          putList.clear();
-	        }
-	
-	        if (i++ % 1000 == 0) {
-	          System.out.print(".");
-	        }
-	    }
-      }
-      if (putList.size() > 0) {
-        table.put(putList);
-      }
-      System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
-    } finally {
-      table.close();
-      connection.close();
-    }
+		final Connection connection = ConnectionFactory.createConnection();
+		Table table = connection.getTable(TableName.valueOf(tableName));
+		int i = 0;
+		try
+		{
+			long startTime = System.currentTimeMillis();
+			ArrayList<Put> putList = new ArrayList();
+			for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
+			{
+				BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
-  }
+				String line = null;
+				while ((line = reader.readLine()) != null)
+				{
+					String[] cells = line.split(",");
 
-  public static byte[] makeRowKey(String cell) {
-    int hashMod = (Math.abs(cell.hashCode()) % 10);
+					Put put = new Put(makeRowKey(cells[0]));
+					put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
+					put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
 
-    return Bytes.toBytes(hashMod + "|" + cell);
-  }
+					putList.add(put);
+
+					if (putList.size() >= putListSize)
+					{
+						table.put(putList);
+						putList.clear();
+					}
+
+					if (i++ % 1000 == 0)
+					{
+						System.out.print(".");
+					}
+				}
+			}
+			if (putList.size() > 0)
+			{
+				table.put(putList);
+			}
+			System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+		} 
+		finally
+		{
+			table.close();
+			connection.close();
+		}
+
+	}
+
+	public static byte[] makeRowKey(String cell)
+	{
+		int hashMod = (Math.abs(cell.hashCode()) % 10);
+
+		return Bytes.toBytes(hashMod + "|" + cell);
+	}
 }

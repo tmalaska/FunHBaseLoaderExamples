@@ -14,84 +14,108 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.ArrayList;
 
-public class DataGenerator {
-	
-  public static void main(String[] args) throws IOException {
-    if(args.length != 3) {
-      System.out.println("{outputDir} {NumberOfRecords} {numberOfThreads}");
-      return;
-    }
+public class DataGenerator
+{
 
-    String outputDirectory = args[0];
-    int numberOfRecords = Integer.parseInt(args[1]);
-    int numberOfThreads = Integer.parseInt(args[2]);
-    int numberOfRecordsPerThread = numberOfRecords/numberOfThreads;
+	public static void main(String[] args) throws IOException
+	{
 
-    FileSystem fs = FileSystem.get(new Configuration());
+		String usage = "{outputDir} {NumberOfRecords} {numberOfThreads}";
+		if (args.length != usage.split(" ").length)
+		{
+			System.out.println(usage);
+			return;
+		}
 
-    ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+		String outputDirectory = args[0];
+		int numberOfRecords = Integer.parseInt(args[1]);
+		int numberOfThreads = Integer.parseInt(args[2]);
+		int numberOfRecordsPerThread = numberOfRecords / numberOfThreads;
 
-    ArrayList<Future> futureList = new ArrayList();
+		FileSystem fs = FileSystem.get(new Configuration());
 
-    for (int i = 0; i < numberOfThreads; i++) {
-      WriterThread thread = new WriterThread(outputDirectory + "/File" + i + ".txt", fs, numberOfRecordsPerThread);
-      futureList.add(executor.submit(thread));
-    }
+		ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
 
-    for (Future future: futureList) {
-      try {
-        future.get();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
-      }
-    }
-    
-    executor.shutdown();
-  }
-  
+		ArrayList<Future> futureList = new ArrayList();
+
+		for (int i = 0; i < numberOfThreads; i++)
+		{
+			WriterThread thread = new WriterThread(outputDirectory + "/File" + i + ".txt", fs,
+					numberOfRecordsPerThread);
+			futureList.add(executor.submit(thread));
+		}
+
+		for (Future future : futureList)
+		{
+			try
+			{
+				future.get();
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			} catch (ExecutionException e)
+			{
+				e.printStackTrace();
+			}
+		}
+
+		executor.shutdown();
+	}
+
 }
 
-class WriterThread implements Runnable {
+class WriterThread implements Runnable
+{
 
 	String outputFileName;
 	FileSystem fs;
 	int numberOfRecordsToWrite;
 
-	public WriterThread(String outputFileName, FileSystem fs, int numberOfRecordsToWrite) {
+	public WriterThread(String outputFileName, FileSystem fs, int numberOfRecordsToWrite)
+	{
 		this.outputFileName = outputFileName;
 		this.fs = fs;
 		this.numberOfRecordsToWrite = numberOfRecordsToWrite;
 	}
 
-	  @Override
-	  public void run() {
-	    BufferedWriter writer = null;
-	    Random r = new Random();
-	    try {
-	      writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(outputFileName))));
+	@Override
+	public void run()
+	{
+		BufferedWriter writer = null;
+		Random r = new Random();
+		try
+		{
+			writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(outputFileName))));
 
-	      for (int i = 0; i < numberOfRecordsToWrite; i++) {
-	        writer.write("foo" + i + "," + r.nextInt(100) + "," + r.nextInt());
-	        writer.newLine();
-	        
-	        if (i % 1000 == 0) {
-	            System.out.print(".");
-	        }
-	      }
+			for (int i = 0; i < numberOfRecordsToWrite; i++)
+			{
+				writer.write("foo" + i + "," + r.nextInt(100) + "," + r.nextInt());
+				writer.newLine();
 
-	    } catch (IOException e) {
-	      e.printStackTrace();
-	    } finally {
-	      if (writer != null) {
-	        try {
-	          writer.close();
-	        } catch (IOException e) {
-	          e.printStackTrace();
-	        }
-	      }
-	    }
-	  }
+				if (i % 1000 == 0)
+				{
+					System.out.print(".");
+				}
+			}
+
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		} 
+		finally
+		{
+			if (writer != null)
+			{
+				try
+				{
+					writer.close();
+				} 
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+	}
 }
-
