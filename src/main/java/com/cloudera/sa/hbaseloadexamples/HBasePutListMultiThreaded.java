@@ -97,13 +97,28 @@ public class HBasePutListMultiThreaded
 		}
 
 		executor.shutdown();
-		Connection connection = null;
-		while ((connection = getConnection()) != null)
-		{
-			connection.close();
-		}
+		
+		shutdownConnections();
+		
+		System.out.println("\nConnections Available: " + _connectionsAvailable.size());
+		System.out.println("\nConnections In Use: " + _connectionsInUse.size());
 
 		System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime) + " " + HBasePutListMultiThreaded.threadFinishedCounter.get() + " " + threadsStarted);
+	}
+	
+	public static synchronized void shutdownConnections()
+	{
+		for (Connection connection : _connectionsAvailable) 
+		{
+			try
+			{
+				connection.close();
+			} 
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public static synchronized Connection getConnection()
