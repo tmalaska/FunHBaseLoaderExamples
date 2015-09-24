@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 public class HBasePutList {
   public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.out.println("{inputDirector} {tableName} {columnFamily} {PutListSize}");
+    if (args.length != 4) {
+      System.out.println("{inputDirectory} {tableName} {columnFamily} {PutListSize}");
       return;
     }
 
@@ -41,22 +41,27 @@ public class HBasePutList {
       ArrayList<Put> putList = new ArrayList();
       for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-        String[] cells = reader.readLine().split(",");
+        
+	    String line = null;
+	    while ((line = reader.readLine()) != null) 
+	    {	
+	    	String[] cells = line.split(",");
 
-        Put put = new Put(makeRowKey(cells[0]));
-        put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
-        put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
-
-        putList.add(put);
-
-        if (putList.size() >= putListSize) {
-          table.put(putList);
-          putList.clear();
-        }
-
-        if (i++ % 1000 == 0) {
-          System.out.print(".");
-        }
+	        Put put = new Put(makeRowKey(cells[0]));
+	        put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
+	        put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
+	
+	        putList.add(put);
+	
+	        if (putList.size() >= putListSize) {
+	          table.put(putList);
+	          putList.clear();
+	        }
+	
+	        if (i++ % 1000 == 0) {
+	          System.out.print(".");
+	        }
+	    }
       }
       if (putList.size() > 0) {
         table.put(putList);

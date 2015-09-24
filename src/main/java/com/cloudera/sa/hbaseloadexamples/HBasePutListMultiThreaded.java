@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 public class HBasePutListMultiThreaded {
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
-      System.out.println("{inputDirector} {tableName} {columnFamily} {PutListSize} {threads}");
+      System.out.println("{inputDirectory} {tableName} {columnFamily} {PutListSize} {threads}");
       return;
     }
 

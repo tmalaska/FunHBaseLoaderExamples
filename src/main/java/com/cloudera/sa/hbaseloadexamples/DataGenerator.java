@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class DataGenerator {
 	
   public static void main(String[] args) throws IOException {
-    if(args.length == 0) {
+    if(args.length != 3) {
       System.out.println("{outputDir} {NumberOfRecords} {numberOfThreads}");
       return;
     }
