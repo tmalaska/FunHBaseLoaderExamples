@@ -16,8 +16,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class HBasePutListMultiThreaded
 {
@@ -47,8 +49,10 @@ public class HBasePutListMultiThreaded
 
 		int i = 0;
 
+		ArrayList<Future> futureList = new ArrayList<Future>();
+
 		long startTime = System.currentTimeMillis();
-		ArrayList<Put> putList = new ArrayList();
+		ArrayList<Put> putList = new ArrayList<Put>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
@@ -67,7 +71,7 @@ public class HBasePutListMultiThreaded
 				if (putList.size() >= putListSize)
 				{
 
-					executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
+					futureList.add(executor.submit(new PutListThread(TableName.valueOf(tableName), putList)));
 
 					putList = new ArrayList<Put>();
 				}
@@ -83,7 +87,22 @@ public class HBasePutListMultiThreaded
 			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 		}
 		System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+		
+		for (Future future : futureList)
+		{
+			try
+			{
+				future.get();
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			} catch (ExecutionException e)
+			{
+				e.printStackTrace();
+			}
+		}
 
+		executor.shutdown();
 	}
 
 	public static byte[] makeRowKey(String cell)
