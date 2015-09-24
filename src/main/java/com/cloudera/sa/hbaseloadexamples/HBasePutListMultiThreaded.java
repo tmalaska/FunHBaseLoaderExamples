@@ -106,8 +106,9 @@ public class HBasePutListMultiThreaded
 		{
 			try
 			{
+				System.out.print("{");
 				future.get();
-				System.out.print("*");
+				System.out.print("}");
 			} 
 			catch (InterruptedException e)
 			{
