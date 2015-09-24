@@ -33,6 +33,72 @@
             <version>2.6.0-cdh5.4.7</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <type>test-jar</type>
+            <!-- <classifier>tests</classifier> Return-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-protocol</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-hadoop2-compat</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <!-- <scope>runtime</scope> -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-hadoop2-compat</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <!-- <scope>test</scope> Return-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <!-- <scope>test</scope> Return-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-hadoop-compat</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <!-- <scope>test</scope> Return-->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-hadoop-compat</artifactId>
+            <version>1.0.0-cdh5.4.7</version>
+            <type>test-jar</type>
+            <classifier>tests</classifier>
+            <!-- <scope>test</scope> Return-->
+        </dependency>
     </dependencies>
 
 
@@ -55,11 +121,6 @@
                     </descriptorRefs>
                     <appendAssemblyId>false</appendAssemblyId>
                     <finalName>HBaseUtilMain</finalName>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.cloudera.sa.hbase.utils.HBaseUtilMain</mainClass>
-                        </manifest>
-                    </archive>
                 </configuration>
                 <executions>
                     <execution>

@@ -23,7 +23,7 @@ public class HBaseSinglePut
 	public static void main(String[] args) throws IOException 
 	{
 		if (args.length == 0) {
-		  System.out.println("{inputDirector} {tableName} {columnFamily}");
+		  System.out.println("{inputDirectory} {tableName} {columnFamily}");
 		  return;
 		}
 		
