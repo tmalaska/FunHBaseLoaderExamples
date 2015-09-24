@@ -108,6 +108,13 @@ public class HBasePutListMultiThreaded
 	
 	public static synchronized void shutdownConnections()
 	{
+		for (int i=_connectionsInUse.size()-1; i>=0; i--)
+		{
+			_connectionsAvailable.add(_connectionsInUse.get(i));
+			_connectionsInUse.remove(i);
+			System.out.println("]");
+		}
+
 		for (Connection connection : _connectionsAvailable) 
 		{
 			try
