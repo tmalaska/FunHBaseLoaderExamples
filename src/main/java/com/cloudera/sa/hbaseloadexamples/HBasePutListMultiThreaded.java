@@ -106,7 +106,7 @@ public class HBasePutListMultiThreaded
 
 		executor.shutdown();
 
-		System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+		System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime));
 	}
 
 	public static byte[] makeRowKey(String cell)

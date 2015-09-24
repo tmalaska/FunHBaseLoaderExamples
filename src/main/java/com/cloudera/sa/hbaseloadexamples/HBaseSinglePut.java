@@ -63,7 +63,7 @@ public class HBaseSinglePut
 					}
 				}
 			}
-			System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+			System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime));
 		} 
 		finally
 		{

@@ -75,7 +75,7 @@ public class HBasePutList
 			{
 				table.put(putList);
 			}
-			System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+			System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime));
 		} 
 		finally
 		{

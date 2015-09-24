@@ -97,7 +97,7 @@ class WriterThread implements Runnable
 					System.out.print(".");
 				}
 			}
-
+			System.out.println();
 		} 
 		catch (IOException e)
 		{
