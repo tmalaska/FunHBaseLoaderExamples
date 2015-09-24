@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
@@ -97,6 +98,15 @@ public class HBasePutListMultiThreaded
 		}
 
 		executor.shutdown();
+		
+		try
+		{
+			executor.awaitTermination(10, TimeUnit.MINUTES);
+		} 
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 		
 		shutdownConnections();
 		
