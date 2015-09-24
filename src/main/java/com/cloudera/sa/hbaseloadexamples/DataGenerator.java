@@ -41,6 +41,8 @@ public class DataGenerator {
         System.out.print(".");
       }
     }
+    System.out.println();
+    System.out.println("Finished");
 
     for (Future future: futureList) {
       try {

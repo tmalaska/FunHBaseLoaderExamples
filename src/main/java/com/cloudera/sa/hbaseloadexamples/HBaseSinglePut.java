@@ -39,16 +39,22 @@ public class HBaseSinglePut {
       long startTime = System.currentTimeMillis();
       for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-        String[] cells = reader.readLine().split(",");
 
-        Put put = new Put(makeRowKey(cells[0]));
-        put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
-        put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
+        String line = reader.readLine();
 
-        table.put(put);
+        while (line != null) {
+          String[] cells = line.split(",");
 
-        if (i++ % 1000 == 0) {
-          System.out.print(".");
+          Put put = new Put(makeRowKey(cells[0]));
+          put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
+          put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
+
+          table.put(put);
+
+          if (i++ % 10 == 0) {
+            System.out.print(".");
+          }
+          line = reader.readLine();
         }
       }
       System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
