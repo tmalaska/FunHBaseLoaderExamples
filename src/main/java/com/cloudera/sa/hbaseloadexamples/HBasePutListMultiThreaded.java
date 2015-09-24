@@ -108,6 +108,7 @@ public class HBasePutListMultiThreaded
 	
 	public static synchronized Connection getConnection()
 	{
+		System.out.print("[");
 		Connection connection = null;
 		
 		if (_connectionsAvailable.isEmpty()) 
@@ -135,6 +136,7 @@ public class HBasePutListMultiThreaded
 	{
 		_connectionsInUse.remove(connection);
 		_connectionsAvailable.add(connection);
+		System.out.println("]");
 	}
 
 	public static byte[] makeRowKey(String cell)
@@ -160,6 +162,7 @@ class PutListThread implements Runnable
 	@Override
 	public void run()
 	{
+		System.out.print("<");
 		Connection connection = null;
 		try
 		{
@@ -186,6 +189,7 @@ class PutListThread implements Runnable
 			}
 		}
 		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
+		System.out.println(">");
 	}
 	
 }
