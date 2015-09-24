@@ -52,6 +52,7 @@ public class HBasePutListMultiThreaded
 		ArrayList<Future> futureList = new ArrayList<Future>();
 
 		long startTime = System.currentTimeMillis();
+		
 		ArrayList<Put> putList = new ArrayList<Put>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
@@ -86,8 +87,7 @@ public class HBasePutListMultiThreaded
 		{
 			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 		}
-		System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
-		
+
 		for (Future future : futureList)
 		{
 			try
@@ -103,6 +103,8 @@ public class HBasePutListMultiThreaded
 		}
 
 		executor.shutdown();
+
+		System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
 	}
 
 	public static byte[] makeRowKey(String cell)
