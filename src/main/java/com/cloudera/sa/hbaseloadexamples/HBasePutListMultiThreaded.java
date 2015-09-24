@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -24,6 +25,7 @@ import org.apache.log4j.Logger;
 
 public class HBasePutListMultiThreaded
 {
+	public static AtomicInteger threadFinishedCounter = new AtomicInteger(0);
 
 	public static void main(String[] args) throws IOException
 	{
@@ -53,6 +55,8 @@ public class HBasePutListMultiThreaded
 
 		long startTime = System.currentTimeMillis();
 		
+		int threadsStarted = 0;
+		
 		ArrayList<Put> putList = new ArrayList<Put>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
@@ -72,6 +76,7 @@ public class HBasePutListMultiThreaded
 				if (putList.size() >= putListSize)
 				{
 
+					threadsStarted++;
 					executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 
 					putList = new ArrayList<Put>();
@@ -85,13 +90,14 @@ public class HBasePutListMultiThreaded
 		}
 		if (putList.size() > 0)
 		{
+			threadsStarted++;
 			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 		}
 
 
 		executor.shutdown();
 
-		System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime));
+		System.out.println("\nFinished: " + (System.currentTimeMillis() - startTime) + " " + HBasePutListMultiThreaded.threadFinishedCounter.get() + " " + threadsStarted);
 	}
 
 	public static byte[] makeRowKey(String cell)
@@ -117,7 +123,6 @@ class PutListThread implements Runnable
 	@Override
 	public void run()
 	{
-		System.out.print("<");
 		Connection connection = null;
 		try
 		{
@@ -150,6 +155,7 @@ class PutListThread implements Runnable
 				}
 			}
 		}
-		System.out.println(">");
+		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
 	}
+	
 }
