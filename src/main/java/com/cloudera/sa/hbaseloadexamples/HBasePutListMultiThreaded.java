@@ -127,6 +127,7 @@ public class HBasePutListMultiThreaded
 		else
 		{
 			connection = _connectionsAvailable.get(0);
+			_connectionsAvailable.remove(connection);
 			_connectionsInUse.add(connection);
 		}
 		return connection;
