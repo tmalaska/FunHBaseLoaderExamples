@@ -51,8 +51,6 @@ public class HBasePutListMultiThreaded
 
 		int i = 0;
 
-		ArrayList<Future> futureList = new ArrayList<Future>();
-
 		long startTime = System.currentTimeMillis();
 		
 		ArrayList<Put> putList = new ArrayList<Put>();
@@ -74,7 +72,7 @@ public class HBasePutListMultiThreaded
 				if (putList.size() >= putListSize)
 				{
 
-					futureList.add(executor.submit(new PutListThread(TableName.valueOf(tableName), putList)));
+					executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 
 					putList = new ArrayList<Put>();
 				}
@@ -90,19 +88,6 @@ public class HBasePutListMultiThreaded
 			executor.execute(new PutListThread(TableName.valueOf(tableName), putList));
 		}
 
-		for (Future future : futureList)
-		{
-			try
-			{
-				future.get();
-			} catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			} catch (ExecutionException e)
-			{
-				e.printStackTrace();
-			}
-		}
 
 		executor.shutdown();
 
@@ -132,6 +117,7 @@ class PutListThread implements Runnable
 	@Override
 	public void run()
 	{
+		System.out.print("<");
 		Connection connection = null;
 		try
 		{
@@ -164,6 +150,6 @@ class PutListThread implements Runnable
 				}
 			}
 		}
-
+		System.out.println(">");
 	}
 }
