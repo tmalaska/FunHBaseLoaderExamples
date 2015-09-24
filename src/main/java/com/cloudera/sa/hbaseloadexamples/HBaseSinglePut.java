@@ -43,9 +43,10 @@ public class HBaseSinglePut
 		  for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
 		    BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
 
-		    String[] cells;
-		    while ((cells = reader.readLine().split(",")) != null) 
-		    {		
+		    String line = null;
+		    while ((line = reader.readLine()) != null) 
+		    {	
+		    	String[] cells = line.split(",");
 			    Put put = new Put(makeRowKey(cells[0]));
 			    put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
 			    put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
