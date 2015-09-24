@@ -17,8 +17,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class HBasePutListMultiThreaded {
   public static void main(String[] args) throws IOException {
@@ -34,6 +37,7 @@ public class HBasePutListMultiThreaded {
     int numberOfThreads = Integer.parseInt(args[4]);
 
     ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+    ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(2));
 
     byte[] qualifier1 = Bytes.toBytes("C1");
     byte[] qualifier2 = Bytes.toBytes("C2");
@@ -95,6 +99,7 @@ class PutListThread implements Runnable {
     Connection connection = null;
     try {
       connection = ConnectionFactory.createConnection();
+
       Table table = null;
       try {
         table = connection.getTable(tableName);
