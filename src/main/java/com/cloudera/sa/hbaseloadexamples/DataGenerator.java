@@ -1,6 +1,5 @@
 package com.cloudera.sa.hbaseloadexamples;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -16,13 +15,14 @@ import java.util.concurrent.Future;
 import java.util.ArrayList;
 
 public class DataGenerator {
+	
   public static void main(String[] args) throws IOException {
     if(args.length == 0) {
       System.out.println("{outputDir} {NumberOfRecords} {numberOfThreads}");
       return;
     }
 
-    String outputDirector = args[0];
+    String outputDirectory = args[0];
     int numberOfRecords = Integer.parseInt(args[1]);
     int numberOfThreads = Integer.parseInt(args[2]);
     int numberOfRecordsPerThread = numberOfRecords/numberOfThreads;
@@ -34,7 +34,7 @@ public class DataGenerator {
     ArrayList<Future> futureList = new ArrayList();
 
     for (int i = 0; i < numberOfThreads; i++) {
-      WriterThread thread = new WriterThread(outputDirector + "/File" + i + ".txt", fs, numberOfRecordsPerThread);
+      WriterThread thread = new WriterThread(outputDirectory + "/File" + i + ".txt", fs, numberOfRecordsPerThread);
       futureList.add(executor.submit(thread));
 
       if (i % 1000 == 0) {
@@ -52,42 +52,44 @@ public class DataGenerator {
       }
     }
   }
+  
 }
 
 class WriterThread implements Runnable {
 
-  String outputFileName;
-  FileSystem fs;
-  int numberOfRecordsToWrite;
+	String outputFileName;
+	FileSystem fs;
+	int numberOfRecordsToWrite;
 
-  public WriterThread(String outputFileName, FileSystem fs, int numberOfRecordsToWrite) {
-    this.outputFileName = outputFileName;
-    this.fs = fs;
-    this.numberOfRecordsToWrite = numberOfRecordsToWrite;
-  }
+	public WriterThread(String outputFileName, FileSystem fs, int numberOfRecordsToWrite) {
+		this.outputFileName = outputFileName;
+		this.fs = fs;
+		this.numberOfRecordsToWrite = numberOfRecordsToWrite;
+	}
 
-  @Override
-  public void run() {
-    BufferedWriter writer = null;
-    Random r = new Random();
-    try {
-      writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(outputFileName))));
+	  @Override
+	  public void run() {
+	    BufferedWriter writer = null;
+	    Random r = new Random();
+	    try {
+	      writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(outputFileName))));
 
-      for (int i = 0; i < numberOfRecordsToWrite; i++) {
-        writer.write("foo" + i + "," + r.nextInt(100) + "," + r.nextInt());
-        writer.newLine();
-      }
+	      for (int i = 0; i < numberOfRecordsToWrite; i++) {
+	        writer.write("foo" + i + "," + r.nextInt(100) + "," + r.nextInt());
+	        writer.newLine();
+	      }
 
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      if (writer != null) {
-        try {
-          writer.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
-    }
-  }
+	    } catch (IOException e) {
+	      e.printStackTrace();
+	    } finally {
+	      if (writer != null) {
+	        try {
+	          writer.close();
+	        } catch (IOException e) {
+	          e.printStackTrace();
+	        }
+	      }
+	    }
+	  }
 }
+

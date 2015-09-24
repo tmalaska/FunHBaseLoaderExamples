@@ -17,49 +17,52 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class HBaseSinglePut {
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.out.println("{inputDirector} {tableName} {columnFamily}");
-      return;
-    }
+public class HBaseSinglePut 
+{
 
-    String inputFile = args[0];
-    String tableName = args[1];
-    byte[] columnFamily = Bytes.toBytes(args[2]);
-    byte[] qualifier1 = Bytes.toBytes("C1");
-    byte[] qualifier2 = Bytes.toBytes("C2");
+	public static void main(String[] args) throws IOException 
+	{
+		if (args.length == 0) {
+		  System.out.println("{inputDirector} {tableName} {columnFamily}");
+		  return;
+		}
+		
+		String inputFile = args[0];
+		String tableName = args[1];
+		byte[] columnFamily = Bytes.toBytes(args[2]);
+		byte[] qualifier1 = Bytes.toBytes("C1");
+		byte[] qualifier2 = Bytes.toBytes("C2");
+		
+		FileSystem fs = FileSystem.get(new Configuration());
+		
+		final Connection connection = ConnectionFactory.createConnection();
+		Table table = connection.getTable(TableName.valueOf(tableName));
+		int i = 0;
+		try {
+		  long startTime = System.currentTimeMillis();
+		  for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
+		    BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
+		    String[] cells = reader.readLine().split(",");
+		
+		    Put put = new Put(makeRowKey(cells[0]));
+		    put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
+		    put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
+		
+		    table.put(put);
+		
+		    if (i++ % 1000 == 0) {
+		      System.out.print(".");
+		    }
+		  }
+		  System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
+		} finally {
+		  table.close();
+		  connection.close();
+		}
+	}
 
-    FileSystem fs = FileSystem.get(new Configuration());
-
-    final Connection connection = ConnectionFactory.createConnection();
-    Table table = connection.getTable(TableName.valueOf(tableName));
-    int i = 0;
-    try {
-      long startTime = System.currentTimeMillis();
-      for (FileStatus fileStatus : fs.listStatus(new Path(inputFile))) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
-        String[] cells = reader.readLine().split(",");
-
-        Put put = new Put(makeRowKey(cells[0]));
-        put.addColumn(columnFamily, qualifier1, Bytes.toBytes(cells[1]));
-        put.addColumn(columnFamily, qualifier2, Bytes.toBytes(cells[2]));
-
-        table.put(put);
-
-        if (i++ % 1000 == 0) {
-          System.out.print(".");
-        }
-      }
-      System.out.println("Finished: " + (System.currentTimeMillis() - startTime));
-    } finally {
-      table.close();
-      connection.close();
-    }
-
-  }
-
-  public static byte[] makeRowKey(String cell) {
+  public static byte[] makeRowKey(String cell) 
+  {
     int hashMod = (Math.abs(cell.hashCode()) % 10);
 
     return Bytes.toBytes(hashMod + "|" + cell);
