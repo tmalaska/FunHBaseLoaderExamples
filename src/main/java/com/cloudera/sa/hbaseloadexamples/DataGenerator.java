@@ -36,10 +36,6 @@ public class DataGenerator {
     for (int i = 0; i < numberOfThreads; i++) {
       WriterThread thread = new WriterThread(outputDirectory + "/File" + i + ".txt", fs, numberOfRecordsPerThread);
       futureList.add(executor.submit(thread));
-
-      if (i % 1000 == 0) {
-        System.out.print(".");
-      }
     }
 
     for (Future future: futureList) {
@@ -79,6 +75,10 @@ class WriterThread implements Runnable {
 	      for (int i = 0; i < numberOfRecordsToWrite; i++) {
 	        writer.write("foo" + i + "," + r.nextInt(100) + "," + r.nextInt());
 	        writer.newLine();
+	        
+	        if (i % 1000 == 0) {
+	            System.out.print(".");
+	        }
 	      }
 
 	    } catch (IOException e) {
