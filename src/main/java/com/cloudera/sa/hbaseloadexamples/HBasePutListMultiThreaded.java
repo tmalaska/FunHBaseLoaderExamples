@@ -63,7 +63,6 @@ public class HBasePutListMultiThreaded
 		int threadsStarted = 0;
 		
 		ArrayList<Put> putList = new ArrayList<Put>();
-		ArrayList<Future> futures = new ArrayList<Future>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
@@ -83,8 +82,7 @@ public class HBasePutListMultiThreaded
 				{
 
 					threadsStarted++;
-					Future future = executor.submit(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
-					futures.add(future);
+					executor.execute(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
 
 					putList = new ArrayList<Put>();
 				}
@@ -97,32 +95,18 @@ public class HBasePutListMultiThreaded
 		}
 		if (putList.size() > 0)
 		{
-			Future future = executor.submit(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
-			futures.add(future);
+			executor.execute(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
 		}
 
-		for (int j = futures.size()-1; j>=0; j--)
-		{
-			try
-			{
-				System.out.print("{");
-				System.out.print(futures.size());
-				futures.get(j).get();
-				futures.remove(j);
-				System.out.print(":"+futures.size());
-				System.out.print("}");
-			} 
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			} 
-			catch (ExecutionException e)
-			{
-
-				e.printStackTrace();
-			}
-		}
 		executor.shutdown();
+		
+		try
+		{
+			executor.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 		
 		shutdownConnections();
 		
@@ -216,45 +200,42 @@ class PutListThread implements Runnable
 	@Override
 	public void run()
 	{
-		synchronized (this)
+		System.out.print("<" + "(" + threadId  + ")");
+		Connection connection = null;
+		try
 		{
-			System.out.print("<" + "(" + threadId  + ")");
-			Connection connection = null;
+			connection = HBasePutListMultiThreaded.getConnection(threadId);
+			Table table = null;
 			try
 			{
-				connection = HBasePutListMultiThreaded.getConnection(threadId);
-				Table table = null;
-				try
-				{
-					int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
-					System.out.print("_/" + "(" + threadId  + ")"+ thread + ":");
-					table = connection.getTable(tableName);
-					table.put(putList);
-					System.out.println(":" + thread + "(" + threadId  + ")" + "\\_");
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-				finally
-				{
-					table.close();
-				}
-			} 
-			catch (IOException e)
+				int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
+				System.out.print("_/" + "(" + threadId  + ")"+ thread + ":");
+				table = connection.getTable(tableName);
+				table.put(putList);
+				System.out.println(":" + thread + "(" + threadId  + ")" + "\\_");
+			}
+			catch (Exception e)
 			{
 				e.printStackTrace();
-			} 
+			}
 			finally
 			{
-				if (connection != null)
-				{
-					HBasePutListMultiThreaded.putConnection(threadId, connection);
-				}
+				table.close();
 			}
-			HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
-			System.out.println("(" + threadId  + ")" + ">");
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		} 
+		finally
+		{
+			if (connection != null)
+			{
+				HBasePutListMultiThreaded.putConnection(threadId, connection);
+			}
 		}
+		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
+		System.out.println("(" + threadId  + ")" + ">");
 	}
 	
 }
