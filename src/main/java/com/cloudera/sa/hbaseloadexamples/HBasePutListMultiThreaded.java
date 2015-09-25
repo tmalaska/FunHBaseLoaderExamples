@@ -154,9 +154,9 @@ public class HBasePutListMultiThreaded
 		}
 	}
 	
-	public static synchronized Connection getConnection()
+	public static synchronized Connection getConnection(int threadId)
 	{
-		System.out.print("[");
+		System.out.print("(" + threadId + ")" + "[");
 		Connection connection = null;
 		
 		if (_connectionsAvailable.isEmpty()) 
@@ -180,11 +180,11 @@ public class HBasePutListMultiThreaded
 		return connection;
 	}
 	
-	public static synchronized void putConnection(Connection connection)
+	public static synchronized void putConnection(int threadId, Connection connection)
 	{
 		_connectionsInUse.remove(connection);
 		_connectionsAvailable.add(connection);
-		System.out.println("]");
+		System.out.println("]" + "(" + threadId + ")");
 	}
 
 	public static byte[] makeRowKey(String cell)
@@ -197,7 +197,7 @@ public class HBasePutListMultiThreaded
 
 class PutListThread implements Runnable
 {
-	Integer threadId;
+	int threadId;
 	TableName tableName;
 	ArrayList<Put> putList = new ArrayList<Put>();
 
@@ -207,25 +207,30 @@ class PutListThread implements Runnable
 		this.tableName = tableName;
 		this.putList = putList;
 	}
+	
+	public int getThreadId()
+	{
+		return threadId;
+	}
 
 	@Override
 	public void run()
 	{
 		synchronized (this)
 		{
-			System.out.print("<");
+			System.out.print("<" + "(" + threadId  + ")");
 			Connection connection = null;
 			try
 			{
-				connection = HBasePutListMultiThreaded.getConnection();
+				connection = HBasePutListMultiThreaded.getConnection(threadId);
 				Table table = null;
 				try
 				{
 					int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
-					System.out.print("_/" + thread);
+					System.out.print("_/" + "(" + threadId  + ")"+ thread + ":");
 					table = connection.getTable(tableName);
 					table.put(putList);
-					System.out.println(thread + "\\_");
+					System.out.println(":" + thread + "(" + threadId  + ")" + "\\_");
 				}
 				catch (Exception e)
 				{
@@ -244,11 +249,11 @@ class PutListThread implements Runnable
 			{
 				if (connection != null)
 				{
-					HBasePutListMultiThreaded.putConnection(connection);
+					HBasePutListMultiThreaded.putConnection(threadId, connection);
 				}
 			}
 			HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
-			System.out.println(">");
+			System.out.println("(" + threadId  + ")" + ">");
 		}
 	}
 	
