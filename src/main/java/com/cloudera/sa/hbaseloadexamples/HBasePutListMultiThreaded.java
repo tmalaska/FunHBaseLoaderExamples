@@ -211,42 +211,45 @@ class PutListThread implements Runnable
 	@Override
 	public void run()
 	{
-		System.out.print("<");
-		Connection connection = null;
-		try
+		synchronized (this)
 		{
-			connection = HBasePutListMultiThreaded.getConnection();
-			Table table = null;
+			System.out.print("<");
+			Connection connection = null;
 			try
 			{
-				int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
-				System.out.print("_/" + thread);
-				table = connection.getTable(tableName);
-				table.put(putList);
-				System.out.println(thread + "\\_");
-			}
-			catch (Exception e)
+				connection = HBasePutListMultiThreaded.getConnection();
+				Table table = null;
+				try
+				{
+					int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
+					System.out.print("_/" + thread);
+					table = connection.getTable(tableName);
+					table.put(putList);
+					System.out.println(thread + "\\_");
+				}
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				finally
+				{
+					table.close();
+				}
+			} 
+			catch (IOException e)
 			{
 				e.printStackTrace();
-			}
+			} 
 			finally
 			{
-				table.close();
+				if (connection != null)
+				{
+					HBasePutListMultiThreaded.putConnection(connection);
+				}
 			}
-		} 
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		} 
-		finally
-		{
-			if (connection != null)
-			{
-				HBasePutListMultiThreaded.putConnection(connection);
-			}
+			HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
+			System.out.println(">");
 		}
-		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
-		System.out.println(">");
 	}
 	
 }
