@@ -219,11 +219,16 @@ class PutListThread implements Runnable
 			Table table = null;
 			try
 			{
-				System.out.print("_/");
+				int thread = HBasePutListMultiThreaded.threadFinishedCounter.get();
+				System.out.print("_/" + thread);
 				table = connection.getTable(tableName);
 				table.put(putList);
-				System.out.println("\\_");
-			} 
+				System.out.println(thread + "\\_");
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 			finally
 			{
 				table.close();
