@@ -83,7 +83,7 @@ public class HBasePutListMultiThreaded
 				{
 
 					threadsStarted++;
-					Future future = executor.submit(new PutListThread(TableName.valueOf(tableName), putList));
+					Future future = executor.submit(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
 					futures.add(future);
 
 					putList = new ArrayList<Put>();
@@ -97,8 +97,7 @@ public class HBasePutListMultiThreaded
 		}
 		if (putList.size() > 0)
 		{
-			threadsStarted++;
-			Future future = executor.submit(new PutListThread(TableName.valueOf(tableName), putList));
+			Future future = executor.submit(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
 			futures.add(future);
 		}
 
@@ -198,12 +197,13 @@ public class HBasePutListMultiThreaded
 
 class PutListThread implements Runnable
 {
-
+	Integer threadId;
 	TableName tableName;
 	ArrayList<Put> putList = new ArrayList<Put>();
 
-	public PutListThread(TableName tableName, ArrayList<Put> putList)
+	public PutListThread(Integer threadId, TableName tableName, ArrayList<Put> putList)
 	{
+		this.threadId = threadId;
 		this.tableName = tableName;
 		this.putList = putList;
 	}
