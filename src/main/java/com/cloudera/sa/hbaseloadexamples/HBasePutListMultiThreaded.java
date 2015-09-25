@@ -125,8 +125,6 @@ public class HBasePutListMultiThreaded
 		}
 		executor.shutdown();
 		
-		executor.
-		
 		shutdownConnections();
 		
 		System.out.println("\nConnections Available: " + _connectionsAvailable.size());
