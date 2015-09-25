@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -63,6 +64,8 @@ public class HBasePutListMultiThreaded
 		int threadsStarted = 0;
 		
 		ArrayList<Put> putList = new ArrayList<Put>();
+		List<Future<PutListThread>> futureList = new ArrayList<Future<PutListThread>>();
+		List<Callable<PutListThread>> callableList = new ArrayList<Callable<PutListThread>>();
 		for (FileStatus fileStatus : fs.listStatus(new Path(inputFile)))
 		{
 			BufferedReader reader = new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath())));
@@ -81,8 +84,10 @@ public class HBasePutListMultiThreaded
 				if (putList.size() >= putListSize)
 				{
 
-					threadsStarted++;
-					executor.execute(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
+					Callable<PutListThread> plt = new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList);
+					callableList.add(plt);
+					Future<PutListThread> future = executor.submit(plt);
+					futureList.add(future);
 
 					putList = new ArrayList<Put>();
 				}
@@ -95,19 +100,22 @@ public class HBasePutListMultiThreaded
 		}
 		if (putList.size() > 0)
 		{
-			executor.execute(new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList));
+			Callable<PutListThread> plt = new PutListThread(threadsStarted++, TableName.valueOf(tableName), putList);
+			callableList.add(plt);
+			Future<PutListThread> future = executor.submit(plt);
+			futureList.add(future);
 		}
 
-		executor.shutdown();
-		
 		try
 		{
-			executor.awaitTermination(5, TimeUnit.SECONDS);
+			executor.invokeAll(callableList);
 		} catch (InterruptedException e)
 		{
 			e.printStackTrace();
 		}
 		
+		executor.shutdown();
+				
 		shutdownConnections();
 		
 		System.out.println("\nConnections Available: " + _connectionsAvailable.size());
@@ -179,7 +187,7 @@ public class HBasePutListMultiThreaded
 	}
 }
 
-class PutListThread implements Runnable
+class PutListThread implements Callable
 {
 	int threadId;
 	TableName tableName;
@@ -198,7 +206,7 @@ class PutListThread implements Runnable
 	}
 
 	@Override
-	public void run()
+	public Object call() throws Exception
 	{
 		System.out.print("<" + "(" + threadId  + ")");
 		Connection connection = null;
@@ -236,6 +244,8 @@ class PutListThread implements Runnable
 		}
 		HBasePutListMultiThreaded.threadFinishedCounter.incrementAndGet();
 		System.out.println("(" + threadId  + ")" + ">");
+		
+		return null;
 	}
 	
 }
