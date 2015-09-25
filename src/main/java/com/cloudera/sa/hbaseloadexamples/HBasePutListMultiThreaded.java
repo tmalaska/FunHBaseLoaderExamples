@@ -102,12 +102,15 @@ public class HBasePutListMultiThreaded
 			futures.add(future);
 		}
 
-		for (Future future : futures)
+		for (int j = futures.size()-1; j>=0; j--)
 		{
 			try
 			{
 				System.out.print("{");
-				future.get();
+				System.out.print(futures.size());
+				futures.get(j).get();
+				futures.remove(j);
+				System.out.print(":"+futures.size());
 				System.out.print("}");
 			} 
 			catch (InterruptedException e)
