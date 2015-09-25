@@ -225,7 +225,8 @@ class PutListThread implements Runnable
 				table = connection.getTable(tableName);
 				table.put(putList);
 				System.out.println("\\_");
-			} finally
+			} 
+			finally
 			{
 				table.close();
 			}
