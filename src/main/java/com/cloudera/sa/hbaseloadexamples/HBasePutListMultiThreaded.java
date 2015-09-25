@@ -125,6 +125,8 @@ public class HBasePutListMultiThreaded
 		}
 		executor.shutdown();
 		
+		executor.
+		
 		shutdownConnections();
 		
 		System.out.println("\nConnections Available: " + _connectionsAvailable.size());
@@ -219,8 +221,10 @@ class PutListThread implements Runnable
 			Table table = null;
 			try
 			{
+				System.out.print("_/");
 				table = connection.getTable(tableName);
 				table.put(putList);
+				System.out.println("\\_");
 			} finally
 			{
 				table.close();
